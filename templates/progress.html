@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Progression - SEO Keyword Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- En-tête -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Traitement en cours</h1>
+        <p class="text-gray-400">Job ID: <span class="font-mono text-brand-blue">{{ job_id }}</span></p>
+    </div>
+
+    <!-- Carte de progression principale -->
+    <div class="bg-card-bg rounded-lg border border-border-gray p-8 mb-8">
+        
+        <!-- Barre de progression -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-lg font-medium">Progression</span>
+                <span id="progressPercent" class="text-2xl font-bold text-brand-blue">0%</span>
+            </div>
+            
+            <div class="w-full bg-gray-700 rounded-full h-4 mb-4">
+                <div id="progressBar" class="bg-gradient-to-r from-brand-blue to-brand-green h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+            </div>
+            
+            <div class="flex justify-between text-sm text-gray-400">
+                <span>Démarrage</span>
+                <span>Terminé</span>
+            </div>
+        </div>
+        
+        <!-- Statut actuel -->
+        <div class="text-center mb-8">
+            <div id="statusIcon" class="mb-4">
+                <i class="fas fa-spinner fa-spin text-brand-blue text-6xl"></i>
+            </div>
+            <h2 id="statusMessage" class="text-xl font-medium mb-2">Initialisation...</h2>
+            <p id="statusDetails" class="text-gray-400">Préparation du traitement</p>
+        </div>
+        
+        <!-- Estimation du temps -->
+        <div id="timeEstimation" class="text-center text-sm text-gray-500">
+            <i class="fas fa-clock mr-1"></i>
+            Temps estimé restant: <span id="estimatedTime">Calcul en cours...</span>
+        </div>
+    </div>
+    
+    <!-- Étapes du traitement -->
+    <div class="bg-card-bg rounded-lg border border-border-gray p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <i class="fas fa-list-check text-brand-green mr-2"></i>
+            Étapes du traitement
+        </h3>
+        
+        <div class="space-y-3">
+            <div id="step1" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Lecture du fichier</p>
+                    <p class="text-sm text-gray-400">Extraction et nettoyage des mots-clés</p>
+                </div>
+            </div>
+            
+            <div id="step2" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Enrichissement SEO</p>
+                    <p class="text-sm text-gray-400">Récupération des métriques (volume, CPC, difficulté)</p>
+                </div>
+            </div>
+            
+            <div id="step3" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Génération des embeddings</p>
+                    <p class="text-sm text-gray-400">Analyse sémantique des mots-clés</p>
+                </div>
+            </div>
+            
+            <div id="step4" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Clustering primaire</p>
+                    <p class="text-sm text-gray-400">Regroupement basé sur les embeddings</p>
+                </div>
+            </div>
+            
+            <div id="step5" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Analyse SERP</p>
+                    <p class="text-sm text-gray-400">Scraping et analyse des résultats de recherche</p>
+                </div>
+            </div>
+            
+            <div id="step6" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Clustering final</p>
+                    <p class="text-sm text-gray-400">Optimisation avec les données SERP</p>
+                </div>
+            </div>
+            
+            <div id="step7" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Nommage intelligent</p>
+                    <p class="text-sm text-gray-400">Attribution de noms aux clusters avec IA</p>
+                </div>
+            </div>
+            
+            <div id="step8" class="step-item flex items-center">
+                <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-clock text-gray-500"></i>
+                </div>
+                <div>
+                    <p class="font-medium">Finalisation</p>
+                    <p class="text-sm text-gray-400">Sauvegarde et export des résultats</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="flex justify-center space-x-4">
+        <button id="cancelBtn" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+            <i class="fas fa-stop mr-2"></i>
+            Annuler le traitement
+        </button>
+        
+        <button id="refreshBtn" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+            <i class="fas fa-refresh mr-2"></i>
+            Actualiser
+        </button>
+    </div>
+    
+    <!-- Modal de succès -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-card-bg rounded-lg border border-border-gray p-8 max-w-md mx-4">
+            <div class="text-center">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-green-500 text-6xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Traitement terminé !</h3>
+                <p class="text-gray-400 mb-6">Votre analyse de mots-clés est prête.</p>
+                
+                <div class="flex space-x-4">
+                    <button id="viewResultsBtn" class="bg-brand-blue hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1">
+                        <i class="fas fa-eye mr-2"></i>
+                        Voir les résultats
+                    </button>
+                    <button id="downloadBtn" class="bg-brand-green hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex-1">
+                        <i class="fas fa-download mr-2"></i>
+                        Télécharger
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const jobId = "{{ job_id }}";
+let pollInterval = null;
+let isCompleted = false;
+
+// Éléments du DOM
+const progressBar = document.getElementById('progressBar');
+const progressPercent = document.getElementById('progressPercent');
+const statusIcon = document.getElementById('statusIcon');
+const statusMessage = document.getElementById('statusMessage');
+const statusDetails = document.getElementById('statusDetails');
+const estimatedTime = document.getElementById('estimatedTime');
+const successModal = document.getElementById('successModal');
+
+// États des étapes
+const steps = [
+    { id: 'step1', name: 'Lecture du fichier', progress: 5 },
+    { id: 'step2', name: 'Enrichissement SEO', progress: 20 },
+    { id: 'step3', name: 'Génération des embeddings', progress: 40 },
+    { id: 'step4', name: 'Clustering primaire', progress: 55 },
+    { id: 'step5', name: 'Analyse SERP', progress: 65 },
+    { id: 'step6', name: 'Clustering final', progress: 80 },
+    { id: 'step7', name: 'Nommage intelligent', progress: 90 },
+    { id: 'step8', name: 'Finalisation', progress: 100 }
+];
+
+// Démarre le polling
+function startPolling() {
+    pollInterval = setInterval(checkProgress, 2000);
+    checkProgress(); // Premier appel immédiat
+}
+
+// Vérifie la progression
+async function checkProgress() {
+    try {
+        const response = await fetch(`/api/jobs/${jobId}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const progress = await response.json();
+        updateProgress(progress);
+        
+    } catch (error) {
+        console.error('Erreur lors de la vérification de la progression:', error);
+        showNotification('Erreur de connexion. Vérification de la progression...', 'error');
+    }
+}
+
+// Met à jour l'affichage de la progression
+function updateProgress(progress) {
+    const percent = Math.round(progress.progress);
+    
+    // Met à jour la barre de progression
+    progressBar.style.width = `${percent}%`;
+    progressPercent.textContent = `${percent}%`;
+    
+    // Met à jour le message de statut
+    statusMessage.textContent = progress.message || 'Traitement en cours...';
+    statusDetails.textContent = progress.current_step || '';
+    
+    // Met à jour l'estimation de temps
+    if (progress.estimated_time_remaining) {
+        const minutes = Math.ceil(progress.estimated_time_remaining / 60);
+        estimatedTime.textContent = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    }
+    
+    // Met à jour les étapes
+    updateSteps(percent);
+    
+    // Gère les états terminaux
+    if (progress.state === 'completed') {
+        handleCompletion();
+    } else if (progress.state === 'failed') {
+        handleFailure(progress.message);
+    }
+}
+
+// Met à jour l'affichage des étapes
+function updateSteps(currentProgress) {
+    steps.forEach((step, index) => {
+        const stepElement = document.getElementById(step.id);
+        const iconElement = stepElement.querySelector('.step-icon i');
+        const iconContainer = stepElement.querySelector('.step-icon');
+        
+        if (currentProgress >= step.progress) {
+            // Étape terminée
+            iconElement.className = 'fas fa-check text-green-400';
+            iconContainer.className = 'step-icon w-8 h-8 rounded-full border-2 border-green-400 bg-green-400 bg-opacity-20 flex items-center justify-center mr-3';
+        } else if (index > 0 && currentProgress >= steps[index - 1].progress) {
+            // Étape en cours
+            iconElement.className = 'fas fa-spinner fa-spin text-brand-blue';
+            iconContainer.className = 'step-icon w-8 h-8 rounded-full border-2 border-brand-blue flex items-center justify-center mr-3';
+        } else {
+            // Étape en attente
+            iconElement.className = 'fas fa-clock text-gray-500';
+            iconContainer.className = 'step-icon w-8 h-8 rounded-full border-2 border-gray-600 flex items-center justify-center mr-3';
+        }
+    });
+}
+
+// Gère la fin du traitement avec succès
+function handleCompletion() {
+    if (isCompleted) return;
+    isCompleted = true;
+    
+    clearInterval(pollInterval);
+    
+    // Met à jour l'icône de statut
+    statusIcon.innerHTML = '<i class="fas fa-check-circle text-green-500 text-6xl"></i>';
+    statusMessage.textContent = 'Traitement terminé avec succès !';
+    statusDetails.textContent = 'Vos résultats sont prêts.';
+    
+    // Affiche la modal de succès après un délai
+    setTimeout(() => {
+        successModal.classList.remove('hidden');
+    }, 1000);
+    
+    showNotification('Traitement terminé avec succès !', 'success');
+}
+
+// Gère les erreurs
+function handleFailure(errorMessage) {
+    clearInterval(pollInterval);
+    
+    statusIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-6xl"></i>';
+    statusMessage.textContent = 'Erreur lors du traitement';
+    statusDetails.textContent = errorMessage || 'Une erreur inattendue s\'est produite.';
+    
+    showNotification('Erreur lors du traitement: ' + errorMessage, 'error');
+}
+
+// Gestion des boutons
+document.getElementById('cancelBtn').addEventListener('click', () => {
+    if (confirm('Êtes-vous sûr de vouloir annuler le traitement ?')) {
+        // TODO: Implémenter l'annulation
+        showNotification('Annulation demandée...', 'info');
+    }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+    checkProgress();
+    showNotification('Actualisation...', 'info');
+});
+
+document.getElementById('viewResultsBtn').addEventListener('click', () => {
+    window.location.href = `/results/${jobId}`;
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+    window.location.href = `/api/jobs/${jobId}/result`;
+});
+
+// Fermer la modal en cliquant à l'extérieur
+successModal.addEventListener('click', (e) => {
+    if (e.target === successModal) {
+        successModal.classList.add('hidden');
+    }
+});
+
+// Démarre le polling au chargement de la page
+document.addEventListener('DOMContentLoaded', () => {
+    startPolling();
+});
+
+// Nettoyage à la fermeture de la page
+window.addEventListener('beforeunload', () => {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+    }
+});
+</script>
+{% endblock %} 

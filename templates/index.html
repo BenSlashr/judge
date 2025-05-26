@@ -1,0 +1,696 @@
+{% extends "base.html" %}
+
+{% block title %}Accueil - SEO Keyword Classifier{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- En-tête -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold gradient-text mb-4">
+            Classez vos mots-clés grâce à l'IA
+        </h1>
+        
+    </div>
+
+    <!-- Section principale d'upload -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        
+        <!-- Zone d'upload -->
+        <div class="lg:col-span-2">
+            <div class="bg-card-bg rounded-lg border border-border-gray p-8">
+                <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-file-upload text-brand-blue mr-3"></i>
+                    Votre fichier de mots-clés
+                </h2>
+                
+                <!-- Zone de drag and drop -->
+                <div id="uploadZone" class="border-2 border-dashed border-border-gray rounded-lg p-8 text-center transition-colors duration-300 hover:border-brand-blue cursor-pointer">
+                    <div id="uploadContent">
+                        <i class="fas fa-cloud-upload-alt text-6xl text-gray-500 mb-4"></i>
+                        <h3 class="text-xl font-medium mb-2">Terme de recherche</h3>
+                        <p class="text-gray-400 mb-4">
+                            Glissez-déposez votre fichier de mots-clés ici ou cliquez pour sélectionner
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Formats supportés: CSV, XLSX (max 50 000 mots-clés)<br>
+                            Colonnes requises: keyword, volume (optionnel: cpc, difficulty)
+                        </p>
+                        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="hidden">
+                        <button type="button" onclick="document.getElementById('fileInput').click()" 
+                                class="mt-4 bg-brand-blue hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>
+                            Choisir un fichier
+                        </button>
+                    </div>
+                    
+                    <!-- Progress bar (cachée par défaut) -->
+                    <div id="uploadProgress" class="hidden">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-spinner fa-spin text-brand-blue text-3xl"></i>
+                        </div>
+                        <p class="text-lg font-medium mb-2">Upload en cours...</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="progressBar" class="bg-brand-blue h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="text-sm text-gray-400 mt-2">0%</p>
+                    </div>
+                </div>
+                
+                <!-- Fichier sélectionné -->
+                <div id="selectedFile" class="hidden mt-6 p-4 bg-gray-800 rounded-lg border border-green-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-excel text-green-500 text-2xl mr-3"></i>
+                            <div>
+                                <p id="fileName" class="font-medium"></p>
+                                <p id="fileSize" class="text-sm text-gray-400"></p>
+                            </div>
+                        </div>
+                        <button onclick="removeFile()" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Paramètres -->
+        <div class="lg:col-span-1">
+            <div class="bg-card-bg rounded-lg border border-border-gray p-6">
+                <h3 class="text-xl font-semibold mb-6 flex items-center">
+                    <i class="fas fa-cogs text-brand-green mr-3"></i>
+                    Réglages
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Mode SERP -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Mode SERP</label>
+                        <select id="serpMode" class="w-full bg-gray-800 border border-border-gray rounded-lg px-3 py-2 text-white">
+                            <option value="none">Tous les types</option>
+                            <option value="pivot_only">Pivot seulement</option>
+                            <option value="full_serp">SERP complète</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Alpha (poids embeddings vs SERP) -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">
+                            Equilibre IA / SERP
+                            <span id="alphaValue" class="text-brand-blue font-mono">0.5</span>
+                        </label>
+                        <input type="range" id="alpha" min="0" max="1" step="0.1" value="0.5" 
+                               class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>SERP</span>
+                            <span>IA</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Algorithme de clustering -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Algorithme</label>
+                        <select id="algorithm" class="w-full bg-gray-800 border border-border-gray rounded-lg px-3 py-2 text-white">
+                            <option value="hdbscan">HDBSCAN (recommandé)</option>
+                            <option value="agglomerative">Agglomératif</option>
+                            <option value="louvain">Louvain</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Taille minimum des clusters -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Taille min. cluster</label>
+                        <input type="number" id="minClusterSize" value="5" min="2" max="50" 
+                               class="w-full bg-gray-800 border border-border-gray rounded-lg px-3 py-2 text-white">
+                    </div>
+                    
+                    <!-- Format d'export -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Format d'export</label>
+                        <select id="exportFormat" class="w-full bg-gray-800 border border-border-gray rounded-lg px-3 py-2 text-white">
+                            <option value="csv">CSV</option>
+                            <option value="xlsx">Excel (XLSX)</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Multi-clustering -->
+                    <div class="border-t border-gray-700 pt-4 mt-4">
+                        <label class="flex items-center cursor-pointer mb-3">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="enableMultiCluster">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <div class="ml-3">
+                                <span class="text-sm font-medium">Multi-clustering</span>
+                                <p class="text-xs text-gray-400">Permet aux mots-clés d'appartenir à plusieurs clusters</p>
+                            </div>
+                        </label>
+                        
+                        <!-- Paramètres avancés multi-clustering (cachés par défaut) -->
+                        <div id="multiClusterParams" class="hidden space-y-3 pl-4 border-l-2 border-brand-blue">
+                            <!-- Seuil principal -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">
+                                    Seuil principal
+                                    <span id="primaryThresholdValue" class="text-brand-blue font-mono">0.6</span>
+                                </label>
+                                <input type="range" id="primaryThreshold" min="0.1" max="1.0" step="0.05" value="0.6" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            
+                            <!-- Seuil secondaire -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">
+                                    Seuil secondaire
+                                    <span id="secondaryThresholdValue" class="text-brand-blue font-mono">0.4</span>
+                                </label>
+                                <input type="range" id="secondaryThreshold" min="0.1" max="0.8" step="0.05" value="0.4" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            
+                            <!-- Max clusters par mot-clé -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Max clusters par mot-clé</label>
+                                <select id="maxClustersPerKeyword" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                                    <option value="3">3 (Standard)</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5 (Étendu)</option>
+                                    <option value="6">6 (Exhaustif)</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="10">10 (Maximum)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Probabilité minimum -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">
+                                    Probabilité minimum
+                                    <span id="minProbabilityValue" class="text-brand-blue font-mono">0.15</span>
+                                </label>
+                                <input type="range" id="minProbability" min="0.05" max="0.5" step="0.05" value="0.15" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sensibilité numérique -->
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer mb-3">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="enableNumericFeatures">
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <div class="ml-3">
+                                <span class="text-sm font-medium">🔢 Sensibilité numérique</span>
+                                <p class="text-xs text-gray-400">Améliore le clustering pour les mots-clés avec des nombres</p>
+                            </div>
+                        </label>
+                        
+                        <!-- Paramètres numériques avancés (cachés par défaut) -->
+                        <div id="numericParams" class="hidden space-y-3 pl-4 border-l-2 border-green-500">
+                            <!-- Méthode -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">Méthode d'intégration</label>
+                                <select id="numericMethod" class="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                                    <option value="enhanced_embeddings">🔗 Embeddings enrichis (Recommandé)</option>
+                                    <option value="hybrid_distance">📏 Distance hybride</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Embeddings enrichis: plus simple et efficace</p>
+                            </div>
+                            
+                            <!-- Poids numérique -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">
+                                    Poids numérique
+                                    <span id="numericWeightValue" class="text-green-400 font-mono">0.10</span>
+                                </label>
+                                <input type="range" id="numericWeight" min="0.05" max="0.5" step="0.05" value="0.10" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-xs text-gray-500 mt-1">Impact des features numériques sur le clustering</p>
+                            </div>
+                            
+                            <!-- Sensibilité (pour distance hybride) -->
+                            <div id="sensitivityParam">
+                                <label class="block text-xs font-medium mb-1">
+                                    Sensibilité distance
+                                    <span id="numericSensitivityValue" class="text-green-400 font-mono">0.50</span>
+                                </label>
+                                <input type="range" id="numericSensitivity" min="0.1" max="2.0" step="0.1" value="0.5" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-xs text-gray-500 mt-1">Influence des différences numériques (distance hybride)</p>
+                            </div>
+                            
+                            <!-- Indicateur de types détectés -->
+                            <div class="bg-gray-800 rounded p-2 text-xs">
+                                <div class="text-gray-400 mb-1">Types détectés automatiquement :</div>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="bg-blue-900 text-blue-300 px-1 rounded">💰 Prix</span>
+                                    <span class="bg-purple-900 text-purple-300 px-1 rounded">📅 Années</span>
+                                    <span class="bg-orange-900 text-orange-300 px-1 rounded">📦 Quantités</span>
+                                    <span class="bg-green-900 text-green-300 px-1 rounded">% Pourcentages</span>
+                                    <span class="bg-red-900 text-red-300 px-1 rounded">⭐ Notations</span>
+                                    <span class="bg-cyan-900 text-cyan-300 px-1 rounded">💾 Tailles</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 🚀 Optimisations SERP -->
+                    <div class="space-y-3">
+                        <div class="text-sm font-medium">🚀 Optimisations SERP</div>
+                        <p class="text-xs text-gray-400 mb-3">Paramètres pour accélérer le traitement avec des milliers de mots-clés</p>
+                        
+                        <!-- Paramètres d'optimisation SERP -->
+                        <div class="space-y-3 pl-4 border-l-2 border-yellow-500">
+                            <!-- Concurrence -->
+                            <div>
+                                <label class="block text-xs font-medium mb-1">
+                                    Appels parallèles SERP
+                                    <span id="concurrentValue" class="text-yellow-400 font-mono">10</span>
+                                </label>
+                                <input type="range" id="serpMaxConcurrent" min="1" max="50" step="1" value="10" 
+                                       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                <p class="text-xs text-gray-500 mt-1">Plus = plus rapide, mais attention aux limites API</p>
+                            </div>
+                            
+                            <!-- Échantillonnage -->
+                            <div>
+                                <label class="flex items-center cursor-pointer">
+                                    <div class="toggle-switch-small">
+                                        <input type="checkbox" id="serpEnableSampling">
+                                        <span class="toggle-slider-small"></span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <span class="text-xs font-medium">Échantillonnage intelligent</span>
+                                        <p class="text-xs text-gray-500">Traite seulement un échantillon représentatif</p>
+                                    </div>
+                                </label>
+                                
+                                <!-- Ratio d'échantillonnage -->
+                                <div id="samplingParams" class="hidden mt-2">
+                                    <label class="block text-xs font-medium mb-1">
+                                        Ratio d'échantillonnage
+                                        <span id="samplingRatioValue" class="text-yellow-400 font-mono">30%</span>
+                                    </label>
+                                    <input type="range" id="serpSamplingRatio" min="0.1" max="1.0" step="0.1" value="0.3" 
+                                           class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                            </div>
+                            
+                            <!-- Clustering intelligent -->
+                            <div>
+                                <label class="flex items-center cursor-pointer">
+                                    <div class="toggle-switch-small">
+                                        <input type="checkbox" id="serpSmartClustering" checked>
+                                        <span class="toggle-slider-small"></span>
+                                    </div>
+                                    <div class="ml-2">
+                                        <span class="text-xs font-medium">Sélection intelligente</span>
+                                        <p class="text-xs text-gray-500">Évite les mots-clés similaires via clustering</p>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Estimation de gain -->
+                            <div class="bg-yellow-900/20 rounded p-2 text-xs">
+                                <div class="text-yellow-400 mb-1">💡 Estimation de performance :</div>
+                                <div class="text-gray-300" id="performanceEstimate">
+                                    1000 mots-clés : ~10min → ~2min (80% plus rapide)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bouton de recherche -->
+                <button id="startAnalysis" disabled 
+                        class="w-full mt-6 bg-brand-blue hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-play mr-2"></i>
+                    RECHERCHER
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section des résultats (cachée par défaut) -->
+    <div id="resultsSection" class="hidden">
+        <div class="bg-card-bg rounded-lg border border-border-gray p-8">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center">
+                <i class="fas fa-chart-bar text-brand-green mr-3"></i>
+                Résultats
+            </h2>
+            
+            <!-- Tableau des résultats -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-border-gray">
+                            <th class="pb-4 text-gray-400 font-medium">NOM</th>
+                            <th class="pb-4 text-gray-400 font-medium">TYPE</th>
+                            <th class="pb-4 text-gray-400 font-medium">DESCRIPTION</th>
+                            <th class="pb-4 text-gray-400 font-medium">MREID</th>
+                            <th class="pb-4 text-gray-400 font-medium">SCORE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        <!-- Les résultats seront insérés ici -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bouton d'export -->
+            <div class="mt-6 flex justify-end">
+                <button id="exportBtn" class="bg-brand-green hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                    <i class="fas fa-download mr-2"></i>
+                    EXPORTER EN CSV
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let selectedFile = null;
+let currentJobId = null;
+
+// Gestion du drag and drop
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('border-brand-blue');
+});
+
+uploadZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('border-brand-blue');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('border-brand-blue');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelect(files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+    }
+});
+
+// Gestion de la sélection de fichier
+function handleFileSelect(file) {
+    const allowedTypes = [
+        'text/csv',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Type de fichier non supporté. Utilisez CSV ou Excel.', 'error');
+        return;
+    }
+    
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+        showNotification('Fichier trop volumineux. Maximum 50MB.', 'error');
+        return;
+    }
+    
+    selectedFile = file;
+    showSelectedFile(file);
+    
+    // Active le bouton de démarrage
+    document.getElementById('startAnalysis').disabled = false;
+}
+
+function showSelectedFile(file) {
+    document.getElementById('selectedFile').classList.remove('hidden');
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+}
+
+function removeFile() {
+    selectedFile = null;
+    document.getElementById('selectedFile').classList.add('hidden');
+    document.getElementById('startAnalysis').disabled = true;
+    fileInput.value = '';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Gestion des paramètres
+document.getElementById('alpha').addEventListener('input', (e) => {
+    document.getElementById('alphaValue').textContent = e.target.value;
+});
+
+// Gestion du multi-clustering
+const enableMultiCluster = document.getElementById('enableMultiCluster');
+const multiClusterParams = document.getElementById('multiClusterParams');
+
+enableMultiCluster.addEventListener('change', (e) => {
+    const isEnabled = e.target.checked;
+    
+    if (isEnabled) {
+        multiClusterParams.classList.remove('hidden');
+    } else {
+        multiClusterParams.classList.add('hidden');
+    }
+});
+
+// Mise à jour des valeurs de seuils
+document.getElementById('primaryThreshold').addEventListener('input', (e) => {
+    document.getElementById('primaryThresholdValue').textContent = e.target.value;
+});
+
+document.getElementById('secondaryThreshold').addEventListener('input', (e) => {
+    document.getElementById('secondaryThresholdValue').textContent = e.target.value;
+});
+
+document.getElementById('minProbability').addEventListener('input', (e) => {
+    document.getElementById('minProbabilityValue').textContent = e.target.value;
+});
+
+// Gestion des features numériques
+const enableNumericFeatures = document.getElementById('enableNumericFeatures');
+const numericParams = document.getElementById('numericParams');
+const numericMethod = document.getElementById('numericMethod');
+const sensitivityParam = document.getElementById('sensitivityParam');
+
+enableNumericFeatures.addEventListener('change', (e) => {
+    const isEnabled = e.target.checked;
+    
+    if (isEnabled) {
+        numericParams.classList.remove('hidden');
+    } else {
+        numericParams.classList.add('hidden');
+    }
+});
+
+// Mise à jour de la méthode numérique
+numericMethod.addEventListener('change', (e) => {
+    const method = e.target.value;
+    
+    if (method === 'hybrid_distance') {
+        sensitivityParam.classList.remove('hidden');
+    } else {
+        sensitivityParam.classList.add('hidden');
+    }
+});
+
+// Mise à jour des valeurs numériques
+document.getElementById('numericWeight').addEventListener('input', (e) => {
+    document.getElementById('numericWeightValue').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+document.getElementById('numericSensitivity').addEventListener('input', (e) => {
+    document.getElementById('numericSensitivityValue').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+// Gestion des optimisations SERP
+document.getElementById('serpMaxConcurrent').addEventListener('input', (e) => {
+    document.getElementById('concurrentValue').textContent = e.target.value;
+    updatePerformanceEstimate();
+});
+
+const serpEnableSampling = document.getElementById('serpEnableSampling');
+const samplingParams = document.getElementById('samplingParams');
+
+serpEnableSampling.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        samplingParams.classList.remove('hidden');
+    } else {
+        samplingParams.classList.add('hidden');
+    }
+    updatePerformanceEstimate();
+});
+
+document.getElementById('serpSamplingRatio').addEventListener('input', (e) => {
+    const percentage = Math.round(parseFloat(e.target.value) * 100);
+    document.getElementById('samplingRatioValue').textContent = percentage + '%';
+    updatePerformanceEstimate();
+});
+
+document.getElementById('serpSmartClustering').addEventListener('change', updatePerformanceEstimate);
+
+function updatePerformanceEstimate() {
+    const concurrent = parseInt(document.getElementById('serpMaxConcurrent').value);
+    const samplingEnabled = document.getElementById('serpEnableSampling').checked;
+    const samplingRatio = parseFloat(document.getElementById('serpSamplingRatio').value);
+    const smartClustering = document.getElementById('serpSmartClustering').checked;
+    
+    // Calcul approximatif du gain de performance
+    let speedMultiplier = concurrent / 10; // Base: 10 appels parallèles
+    
+    if (samplingEnabled) {
+        speedMultiplier *= (1 / samplingRatio); // Réduction par échantillonnage
+    }
+    
+    if (smartClustering) {
+        speedMultiplier *= 1.5; // Bonus clustering intelligent
+    }
+    
+    // Estimation du temps
+    const baseTime = 10; // 10 minutes pour 1000 mots-clés
+    const optimizedTime = Math.max(0.5, baseTime / speedMultiplier);
+    const improvement = Math.round((1 - optimizedTime / baseTime) * 100);
+    
+    const estimate = `1000 mots-clés : ~${baseTime}min → ~${optimizedTime.toFixed(1)}min (${improvement}% plus rapide)`;
+    document.getElementById('performanceEstimate').textContent = estimate;
+}
+
+// Démarrage de l'analyse
+document.getElementById('startAnalysis').addEventListener('click', async () => {
+    if (!selectedFile) return;
+    
+    const parameters = {
+        serp_mode: document.getElementById('serpMode').value,
+        alpha: parseFloat(document.getElementById('alpha').value),
+        clustering_algorithm: document.getElementById('algorithm').value,
+        min_cluster_size: parseInt(document.getElementById('minClusterSize').value),
+        export_format: document.getElementById('exportFormat').value,
+        country_code: 'FR',
+        language: 'fr',
+        enable_multi_cluster: document.getElementById('enableMultiCluster').checked,
+        primary_threshold: parseFloat(document.getElementById('primaryThreshold').value),
+        secondary_threshold: parseFloat(document.getElementById('secondaryThreshold').value),
+        max_clusters_per_keyword: parseInt(document.getElementById('maxClustersPerKeyword').value),
+        min_probability_threshold: parseFloat(document.getElementById('minProbability').value),
+        
+        // Paramètres sensibilité numérique
+        enable_numeric_features: document.getElementById('enableNumericFeatures').checked,
+        numeric_method: document.getElementById('numericMethod').value,
+        numeric_weight: parseFloat(document.getElementById('numericWeight').value),
+        numeric_sensitivity: parseFloat(document.getElementById('numericSensitivity').value),
+        
+        // Paramètres optimisation SERP
+        serp_max_concurrent: parseInt(document.getElementById('serpMaxConcurrent').value),
+        serp_enable_sampling: document.getElementById('serpEnableSampling').checked,
+        serp_sampling_ratio: parseFloat(document.getElementById('serpSamplingRatio').value),
+        serp_enable_smart_clustering: document.getElementById('serpSmartClustering').checked
+    };
+    
+    try {
+        // Prépare les données du formulaire
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        formData.append('parameters', JSON.stringify(parameters));
+        
+        // Lance l'analyse
+        showNotification('Démarrage de l\'analyse...', 'info');
+        
+        const response = await fetch('/api/jobs', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors du démarrage de l\'analyse');
+        }
+        
+        const result = await response.json();
+        currentJobId = result.job_id;
+        
+        // Redirige vers la page de progression
+        window.location.href = `/progress/${currentJobId}`;
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        showNotification('Erreur lors du démarrage de l\'analyse: ' + error.message, 'error');
+    }
+});
+
+// Simulation des résultats pour la démonstration
+function simulateResults() {
+    const resultsSection = document.getElementById('resultsSection');
+    const tableBody = document.getElementById('resultsTableBody');
+    
+    // Données d'exemple
+    const sampleResults = [
+        {
+            name: 'Paris',
+            type: 'Ville',
+            description: 'Capitale de la France, ville lumière connue pour ses monuments historiques',
+            mreid: '/m/05qtj',
+            score: 95.2
+        },
+        {
+            name: 'Tour Eiffel',
+            type: 'Monument',
+            description: 'Monument emblématique de Paris construit par Gustave Eiffel',
+            mreid: '/m/02j81',
+            score: 87.6
+        },
+        {
+            name: 'France',
+            type: 'Pays',
+            description: 'Pays situé en Europe occidentale',
+            mreid: '/m/0f8l9c',
+            score: 92.1
+        }
+    ];
+    
+    tableBody.innerHTML = '';
+    
+    sampleResults.forEach(result => {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-border-gray hover:bg-gray-800 transition-colors';
+        row.innerHTML = `
+            <td class="py-4">${result.name}</td>
+            <td class="py-4 text-gray-400">${result.type}</td>
+            <td class="py-4 text-gray-400 max-w-xs truncate">${result.description}</td>
+            <td class="py-4 font-mono text-brand-blue">${result.mreid}</td>
+            <td class="py-4">
+                <span class="bg-green-900 text-green-300 px-2 py-1 rounded text-sm">
+                    ${result.score}%
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    
+    resultsSection.classList.remove('hidden');
+}
+
+// Export CSV (démonstration)
+document.getElementById('exportBtn').addEventListener('click', () => {
+    showNotification('Export démarré...', 'success');
+    // Ici on implémenterait l'export réel
+});
+</script>
+{% endblock %} 
