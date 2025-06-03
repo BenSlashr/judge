@@ -212,7 +212,7 @@ function startPolling() {
 // Vérifie la progression
 async function checkProgress() {
     try {
-        const response = await fetch(`/api/jobs/${jobId}`);
+        const response = await fetch(buildUrl(`/api/jobs/${jobId}`));
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -328,7 +328,7 @@ document.getElementById('viewResultsBtn').addEventListener('click', () => {
 });
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
-    window.location.href = `/api/jobs/${jobId}/result`;
+    window.location.href = buildUrl(`/api/jobs/${jobId}/result`);
 });
 
 // Fermer la modal en cliquant à l'extérieur

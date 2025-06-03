@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="SEO Keyword Classifier",
     description="Outil d'analyse et de clustering de mots-clés SEO",
-    version="1.0.0"
+    version="1.0.0",
+    root_path=settings.root_path
 )
 
 # Configuration CORS
@@ -79,19 +80,26 @@ async def shutdown_event():
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Page d'accueil avec interface d'upload"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "root_path": settings.root_path
+    })
 
 @app.get("/parameters", response_class=HTMLResponse)
 async def parameters_page(request: Request):
     """Page de configuration des paramètres"""
-    return templates.TemplateResponse("parameters.html", {"request": request})
+    return templates.TemplateResponse("parameters.html", {
+        "request": request,
+        "root_path": settings.root_path
+    })
 
 @app.get("/progress/{job_id}", response_class=HTMLResponse)
 async def progress_page(request: Request, job_id: str):
     """Page de suivi de progression"""
     return templates.TemplateResponse("progress.html", {
         "request": request, 
-        "job_id": job_id
+        "job_id": job_id,
+        "root_path": settings.root_path
     })
 
 @app.get("/results/{job_id}", response_class=HTMLResponse)
@@ -99,13 +107,17 @@ async def results_page(request: Request, job_id: str):
     """Page d'affichage des résultats"""
     return templates.TemplateResponse("results.html", {
         "request": request, 
-        "job_id": job_id
+        "job_id": job_id,
+        "root_path": settings.root_path
     })
 
 @app.get("/history", response_class=HTMLResponse)
 async def history_page(request: Request):
     """Page d'historique des jobs"""
-    return templates.TemplateResponse("history.html", {"request": request})
+    return templates.TemplateResponse("history.html", {
+        "request": request,
+        "root_path": settings.root_path
+    })
 
 # ===== API ENDPOINTS =====
 

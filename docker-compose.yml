@@ -19,6 +19,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=sqlite:///./data/app.db
+      - ROOT_PATH=${ROOT_PATH:-}
     depends_on:
       - redis
 
@@ -31,6 +32,7 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=sqlite:///./data/app.db
+      - ROOT_PATH=${ROOT_PATH:-}
     depends_on:
       - redis
 

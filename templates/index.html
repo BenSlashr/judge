@@ -614,7 +614,7 @@ document.getElementById('startAnalysis').addEventListener('click', async () => {
         // Lance l'analyse
         showNotification('Démarrage de l\'analyse...', 'info');
         
-        const response = await fetch('/api/jobs', {
+        const response = await fetch(buildUrl('/api/jobs'), {
             method: 'POST',
             body: formData
         });

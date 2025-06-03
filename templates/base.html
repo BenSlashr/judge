@@ -162,7 +162,7 @@
                         <h1 class="text-xl font-bold gradient-text">SEO Keyword Classifier</h1>
                     </div>
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/" class="nav-link px-3 py-2 rounded-md text-sm font-medium hover:bg-card-bg transition-colors">
+                        <a href="{{ root_path }}/" class="nav-link px-3 py-2 rounded-md text-sm font-medium hover:bg-card-bg transition-colors">
                             <i class="fas fa-home mr-2"></i>Accueil
                         </a>
                     </div>
@@ -197,6 +197,18 @@
 
     <!-- Scripts globaux -->
     <script>
+        // Configuration du préfixe de chemin
+        window.ROOT_PATH = '{{ root_path }}';
+        
+        // Fonction utilitaire pour construire les URLs
+        function buildUrl(path) {
+            // Assure-toi que le chemin commence par /
+            if (!path.startsWith('/')) {
+                path = '/' + path;
+            }
+            return window.ROOT_PATH + path;
+        }
+        
         // Utilitaires JavaScript globaux
         
         // Format des nombres

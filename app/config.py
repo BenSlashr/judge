@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     processing_rate_pivot: int = 1000  # keywords per minute
     processing_rate_full_serp: int = 300  # keywords per minute
     
+    # Deployment settings
+    root_path: str = ""  # Pour déploiement sous-chemin (ex: /judge)
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

@@ -16,7 +16,7 @@
                 <i class="fas fa-download mr-2"></i>
                 Télécharger CSV
             </button>
-            <a href="/" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+            <a href="{{ root_path }}/" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Nouvelle analyse
             </a>
@@ -216,7 +216,7 @@ document.getElementById('multiClusterTab').addEventListener('click', () => switc
 async function loadResults() {
     try {
         console.log('🔄 Chargement des résultats pour job:', jobId);
-        const response = await fetch(`/api/jobs/${jobId}/details`);
+        const response = await fetch(buildUrl(`/api/jobs/${jobId}/details`));
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -394,7 +394,7 @@ function displayKeywords() {
 
 // Téléchargement
 document.getElementById('downloadBtn').addEventListener('click', () => {
-    window.location.href = `/api/jobs/${jobId}/result`;
+    window.location.href = buildUrl(`/api/jobs/${jobId}/result`);
 });
 
 // Affiche les mots-clés multi-clusters
