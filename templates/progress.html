@@ -324,7 +324,7 @@ document.getElementById('refreshBtn').addEventListener('click', () => {
 });
 
 document.getElementById('viewResultsBtn').addEventListener('click', () => {
-    window.location.href = `/results/${jobId}`;
+    window.location.href = buildUrl(`/results/${jobId}`);
 });
 
 document.getElementById('downloadBtn').addEventListener('click', () => {

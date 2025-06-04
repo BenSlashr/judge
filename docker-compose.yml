@@ -8,6 +8,13 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   app:
     build: .
@@ -21,11 +28,19 @@ services:
       - DATABASE_URL=sqlite:///./data/app.db
       - ROOT_PATH=${ROOT_PATH:-}
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   worker:
     build: .
-    command: celery -A app.celery_app worker --loglevel=info
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=2
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -34,7 +49,14 @@ services:
       - DATABASE_URL=sqlite:///./data/app.db
       - ROOT_PATH=${ROOT_PATH:-}
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   redis_data: 

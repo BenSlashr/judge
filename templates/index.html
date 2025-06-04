@@ -627,7 +627,7 @@ document.getElementById('startAnalysis').addEventListener('click', async () => {
         currentJobId = result.job_id;
         
         // Redirige vers la page de progression
-        window.location.href = `/progress/${currentJobId}`;
+        window.location.href = buildUrl(`/progress/${currentJobId}`);
         
     } catch (error) {
         console.error('Erreur:', error);

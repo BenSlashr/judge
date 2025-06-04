@@ -10,7 +10,9 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.requests import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.models import (
@@ -45,6 +47,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware pour gérer les headers de proxy
+class ProxyHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Traite les headers X-Forwarded-* pour les reverse proxies
+        if "X-Forwarded-Proto" in request.headers:
+            request.scope["scheme"] = request.headers["X-Forwarded-Proto"]
+        if "X-Forwarded-Host" in request.headers:
+            request.scope["server"] = (request.headers["X-Forwarded-Host"], 443 if request.scope["scheme"] == "https" else 80)
+        
+        response = await call_next(request)
+        return response
+
+app.add_middleware(ProxyHeadersMiddleware)
+
 # Configuration des fichiers statiques et templates
 static_dir = Path("static")
 static_dir.mkdir(exist_ok=True)
@@ -64,11 +80,22 @@ async def startup_event():
     """Événement de démarrage de l'application"""
     logger.info("Démarrage de l'application SEO Keyword Classifier")
     
+    # Test de connexion Redis
+    try:
+        # Test de ping Redis
+        inspect = celery_app.control.inspect()
+        active_workers = inspect.active()
+        logger.info(f"✅ Connexion Redis OK - Workers actifs: {active_workers}")
+    except Exception as e:
+        logger.error(f"❌ Erreur connexion Redis: {e}")
+    
     # Initialise la base de données
     db_manager._init_tables()
     
     # Nettoie le cache expiré au démarrage
     db_manager.cleanup_expired_cache()
+    
+    logger.info(f"🚀 Application démarrée avec ROOT_PATH: '{settings.root_path}'")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -115,6 +142,14 @@ async def results_page(request: Request, job_id: str):
 async def history_page(request: Request):
     """Page d'historique des jobs"""
     return templates.TemplateResponse("history.html", {
+        "request": request,
+        "root_path": settings.root_path
+    })
+
+@app.get("/test-links", response_class=HTMLResponse)
+async def test_links_page(request: Request):
+    """Page de test pour vérifier tous les liens avec root_path"""
+    return templates.TemplateResponse("test_links.html", {
         "request": request,
         "root_path": settings.root_path
     })
