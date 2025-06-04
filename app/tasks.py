@@ -15,15 +15,55 @@ from app.utils.file_processing import process_uploaded_file, export_results
 
 logger = logging.getLogger(__name__)
 
+@celery_app.task
+def test_task():
+    """Tâche de test simple pour vérifier que Celery fonctionne"""
+    logger.info("🧪 TÂCHE DE TEST EXÉCUTÉE AVEC SUCCÈS!")
+    return "Test réussi!"
+
+@celery_app.task
+def ping_task():
+    """Tâche ping simple"""
+    return "pong"
+
 @celery_app.task(bind=True)
 def process_keywords_task(self, job_id: str, file_path: str, parameters_dict: Dict[str, Any]):
     """Tâche principale de traitement des mots-clés"""
     
+    # LOGS DE DEBUG TRÈS DÉTAILLÉS
+    print(f"🚨🚨🚨 DÉBUT ABSOLU DE LA TÂCHE - JOB {job_id} 🚨🚨🚨")
+    logger.info(f"🚨🚨🚨 DÉBUT ABSOLU DE LA TÂCHE - JOB {job_id} 🚨🚨🚨")
+    
+    # Vérification des paramètres d'entrée
+    print(f"📥 PARAMÈTRES REÇUS:")
+    print(f"  - job_id: {job_id} (type: {type(job_id)})")
+    print(f"  - file_path: {file_path} (type: {type(file_path)})")
+    print(f"  - parameters_dict: {parameters_dict} (type: {type(parameters_dict)})")
+    
+    logger.info(f"📥 PARAMÈTRES REÇUS:")
+    logger.info(f"  - job_id: {job_id} (type: {type(job_id)})")
+    logger.info(f"  - file_path: {file_path} (type: {type(file_path)})")
+    logger.info(f"  - parameters_dict: {parameters_dict} (type: {type(parameters_dict)})")
+    
+    # Vérification de l'existence du fichier
+    import os
+    if os.path.exists(file_path):
+        print(f"✅ Fichier trouvé: {file_path}")
+        logger.info(f"✅ Fichier trouvé: {file_path}")
+    else:
+        print(f"❌ Fichier introuvable: {file_path}")
+        logger.error(f"❌ Fichier introuvable: {file_path}")
+    
+    print(f"🚀 DÉBUT JOB {job_id} - Paramètres: {parameters_dict}")
     logger.info(f"🚀 DÉBUT JOB {job_id} - Paramètres: {parameters_dict}")
     
     try:
         # Parse les paramètres
+        print(f"🔧 JOB {job_id} - Parsing des paramètres...")
+        logger.info(f"🔧 JOB {job_id} - Parsing des paramètres...")
+        
         parameters = JobParameters(**parameters_dict)
+        print(f"✅ JOB {job_id} - Paramètres parsés: {parameters}")
         logger.info(f"✅ JOB {job_id} - Paramètres parsés: {parameters}")
         
         # Met à jour le statut

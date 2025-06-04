@@ -20,8 +20,8 @@ from app.models import (
     JobStatus, UMAPVisualization, Keyword, Cluster
 )
 from app.database import db_manager
-from app.tasks import process_keywords_task
 from app.celery_app import celery_app
+# Import des tâches fait de manière lazy pour éviter les imports circulaires
 
 # Configuration du logging
 logging.basicConfig(
@@ -154,6 +154,96 @@ async def test_links_page(request: Request):
         "root_path": settings.root_path
     })
 
+@app.get("/test-celery")
+async def test_celery():
+    """Test de fonctionnement de Celery"""
+    try:
+        # Import lazy pour éviter les problèmes d'import circulaire
+        from app.tasks import ping_task, test_task
+        
+        # Test de ping simple
+        ping_result = ping_task.delay()
+        logger.info(f"Tâche ping lancée: {ping_result.id}")
+        
+        # Test avec log
+        test_result = test_task.delay()
+        logger.info(f"Tâche test lancée: {test_result.id}")
+        
+        # Essaie de récupérer le résultat (avec timeout)
+        try:
+            ping_value = ping_result.get(timeout=10)
+            test_value = test_result.get(timeout=10)
+            
+            return {
+                "status": "success",
+                "ping_task_id": ping_result.id,
+                "ping_result": ping_value,
+                "test_task_id": test_result.id,
+                "test_result": test_value,
+                "message": "Celery fonctionne correctement!"
+            }
+        except Exception as timeout_error:
+            return {
+                "status": "timeout",
+                "ping_task_id": ping_result.id,
+                "test_task_id": test_result.id,
+                "error": str(timeout_error),
+                "message": "Les tâches ont été créées mais n'ont pas été traitées dans les temps"
+            }
+            
+    except Exception as e:
+        logger.error(f"Erreur test Celery: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Erreur lors du test Celery"
+        }
+
+@app.get("/test-celery-simple")
+async def test_celery_simple():
+    """Test de communication avec Celery avec tâches simples"""
+    logger.info("🧪 Test des tâches Celery simples")
+    
+    try:
+        # Import des tâches de façon lazy
+        from app.tasks import ping_task, test_task
+        
+        # Test ping
+        logger.info("📤 Lancement tâche ping...")
+        ping_result = ping_task.delay()
+        logger.info(f"🎯 Tâche ping créée: {ping_result.id}")
+        
+        # Attendre 5 secondes max
+        try:
+            ping_response = ping_result.get(timeout=5)
+            logger.info(f"✅ Ping reçu: {ping_response}")
+        except Exception as e:
+            logger.error(f"❌ Ping timeout: {e}")
+            ping_response = f"TIMEOUT: {e}"
+        
+        # Test tâche simple
+        logger.info("📤 Lancement tâche test...")
+        test_result = test_task.delay()
+        logger.info(f"🎯 Tâche test créée: {test_result.id}")
+        
+        try:
+            test_response = test_result.get(timeout=5)
+            logger.info(f"✅ Test reçu: {test_response}")
+        except Exception as e:
+            logger.error(f"❌ Test timeout: {e}")
+            test_response = f"TIMEOUT: {e}"
+        
+        return {
+            "ping_task_id": ping_result.id,
+            "ping_result": ping_response,
+            "test_task_id": test_result.id,
+            "test_result": test_response
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur test Celery: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Erreur test Celery: {str(e)}")
+
 # ===== API ENDPOINTS =====
 
 @app.post("/api/jobs")
@@ -190,6 +280,7 @@ async def create_job(
         db_manager.create_job(job_id, job_parameters, len(keywords))
         
         # Lance la tâche asynchrone
+        from app.tasks import process_keywords_task
         task = process_keywords_task.delay(
             job_id=job_id,
             file_path=str(file_path),
